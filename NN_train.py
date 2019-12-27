@@ -85,3 +85,23 @@ for i in range(0,samples):
                 print(i, j, dataMat[j, 3], dataMat[j, 4], dataMat[j, 5])
 
 
+data = dataMat[:, [3,4,5]] #X,Y,tita
+output = dataMat[:, [0,1,2]] #Q1,Q2,Q3
+
+train_input = data[0:int(0.7*samples), :]
+train_output = output[0:int(0.7*samples), :]
+
+test_input = data[int(0.7*samples):int(0.85*samples), :]
+test_output = output[int(0.7*samples):int(0.85*samples), :]
+
+validate_input = data[int(0.85*samples):int(samples), :]
+validate_output = output[int(0.85*samples):int(samples), :]
+
+print("Train Input--------------------")
+print(np.shape(train_input))
+print(train_input)
+
+print("Output-----------------------")
+print(np.shape(output))
+print(output)
+
