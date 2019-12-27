@@ -1,6 +1,9 @@
 import math
 import random
+
+import numpy as np
 from matplotlib import pyplot as plt
+from sklearn import preprocessing
 
 linkLength = 2
 
@@ -69,3 +72,16 @@ plt.xlabel("X axis")
 plt.ylabel("Y axis")
 plt.title("Data set of 1000 possible endeffector positions  and orientations")
 plt.show()
+
+dataMat = np.c_[Q1,Q2,Q3,posX,posY,titaEnd]
+
+for i in range(0,samples):
+    check1 = dataMat[i, 3]
+    check2 = dataMat[i, 4]
+    check3 = dataMat[i, 5]
+    for j in range(0, samples):
+        if i != j:
+            if(dataMat[j, 3] == check1 and dataMat[j, 4] == check2 and dataMat[j, 5] == check3):
+                print(i, j, dataMat[j, 3], dataMat[j, 4], dataMat[j, 5])
+
+
