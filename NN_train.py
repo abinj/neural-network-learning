@@ -1,7 +1,10 @@
 import math
 import random
 
+import keras
 import numpy as np
+import tensorflow as tf
+from keras.callbacks import TensorBoard
 from matplotlib import pyplot as plt
 from sklearn import preprocessing
 
@@ -28,6 +31,13 @@ def Ye(q1, q2, q3):
 
 def tita(q1, q2, q3):
     return math.degrees(q1) + math.degrees(q2) + math.degrees(q3)
+
+def build_model():
+    model = keras.Sequential()
+    model.add(keras.layers.Dense(100,use_bias=True,activation='tanh'))
+    model.add(keras.layers.Dense(3,use_bias=True,activation='linear'))
+    model.compile(optimizer=tf.compat.v1.train.AdamOptimizer(0.05), loss=keras.losses.mean_squared_error, metrics=['accuracy'])
+    return model
 
 
 for i in range(0,samples):
@@ -104,4 +114,108 @@ print(train_input)
 print("Output-----------------------")
 print(np.shape(output))
 print(output)
+
+x_scaler = preprocessing.MinMaxScaler(feature_range=(-1,1))
+y_scaler = preprocessing.MinMaxScaler(feature_range=(-1,1))
+x_scaler_test = preprocessing.MinMaxScaler(feature_range=(-1,1))
+y_scaler_test = preprocessing.MinMaxScaler(feature_range=(-1,1))
+x_scaler_eva = preprocessing.MinMaxScaler(feature_range=(-1,1))
+y_scaler_eva = preprocessing.MinMaxScaler(feature_range=(-1,1))
+
+dataX = x_scaler.fit_transform((train_input))
+dataY = y_scaler.fit_transform(train_output)
+dataX_test = x_scaler_test.fit_transform(test_input)
+dataY_test = y_scaler_test.fit_transform(test_output)
+dataX_eva = x_scaler_eva.fit_transform(validate_input)
+dataY_eva = y_scaler_eva.fit_transform(validate_output)
+
+NAME = "Trajectry Tracking"
+
+tensorboard = TensorBoard(log_dir="logs/{}".format(NAME))
+
+
+model = build_model()
+
+history = model.fit(dataX, dataY, nb_epoch=100, callbacks=[tensorboard])    #train the model
+
+[loss, mae] = model.evaluate(dataX_test,dataY_test, verbose=0)  #Evaluation
+
+print("Testing set Mean Abs Error: ${:7.2f}".format(mae))
+
+
+dataX_input = x_scaler.transform(validate_input)
+test_prediction = model.predict(dataX_input)
+real_prediction = y_scaler.inverse_transform(test_prediction)
+
+plt.clf()
+plt.scatter(validate_output[:, 0], real_prediction[:, 0], c='b')
+plt.scatter(validate_output[:, 1], real_prediction[:, 1],c='g')
+plt.scatter(validate_output[:, 2], real_prediction[:, 2], c='r')
+plt.xlabel('True Values angles in rad')
+plt.ylabel('Predictions angles in rad')
+plt.title("True Value Vs Prediction")
+plt.legend("If all predicted values equal to the desired(true) value, this will be lie on 45 degree line")
+
+plt.show()
+
+print("***************************")
+print(validate_input[100,0], " ", validate_input[100,1])
+print(Xe(real_prediction[100,0], real_prediction[100,1], real_prediction[100,2]), " "
+      , Ye(real_prediction[100,0], real_prediction[100, 1], real_prediction[100,2]))
+print("***************************")
+
+single_data_1 = np.array([[5,2,60]])
+single_data = x_scaler.transform((single_data_1))
+single_prediction = model.predict(single_data)
+single_real_prediction = y_scaler.inverse_transform(single_prediction)
+
+print(single_data_1[0,0], " ", single_data_1[0,1])
+print(Xe(single_real_prediction[0,0], single_real_prediction[0,1], single_real_prediction[0,2]), " "
+      , Ye(single_real_prediction[0,0], single_real_prediction[0,1], single_real_prediction[0,2]))
+print("****************************")
+
+Xc = 0
+Yc = 0
+r =2
+data_points = 100
+
+Input_Circle = np.zeros((data_points, 3), float)
+Output_Circle= np.zeros((data_points, 3), float)
+Single_input = np.zeros((1,3), float)
+
+titaz = np.linspace(0,6,num=data_points)
+
+tagectory = []
+
+for i in range(0, len(titaz)):
+    Input_Circle[i][0]=Xc + titaz[i]
+    Input_Circle[i][1]=Yc + titaz[i]
+    Input_Circle[i][2]= 90
+
+
+plt.clf()
+plt.scatter(Input_Circle[:,0], Input_Circle[:, 1], c = 'b')
+plt.xlabel("X axis")
+plt.ylabel("Y axis")
+plt.title("Desired Tragectory Coordinates and Predicted ")
+
+inin = np.zeros((1,3), float)
+inin[0][0] = Input_Circle[0,0]
+inin[0][1] = Input_Circle[0,1]
+inin[0][2] = Input_Circle[0,2]
+
+Predicted_coordinates = np.zeros((data_points, 3), float)
+print(np.shape(Input_Circle))
+
+print(single_data_1[0,0], " ", single_data_1[0,1])
+print(Xe(single_real_prediction[0,0], single_real_prediction[0,1], single_real_prediction[0,2]), " "
+      , Ye(single_real_prediction[0,0], single_real_prediction[0,1], single_real_prediction[0,2]))
+
+print("********************************")
+
+
+Joint_angle_predict = np.zeros((data_points,4), float)
+Error = np.zeros((data_points, 7), float)
+
+Tita_hat= 0
 
