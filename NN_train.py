@@ -4,6 +4,7 @@ import random
 import keras
 import numpy as np
 import tensorflow as tf
+from matplotlib import patches as mpatches
 from keras.callbacks import TensorBoard
 from matplotlib import pyplot as plt
 from sklearn import preprocessing
@@ -218,4 +219,61 @@ Joint_angle_predict = np.zeros((data_points,4), float)
 Error = np.zeros((data_points, 7), float)
 
 Tita_hat= 0
+
+for q in range(0, data_points):
+    single_data_1 = np.array([[Input_Circle[q, 0], Input_Circle[q,1], Input_Circle[q,2]]])
+    single_data = x_scaler.transform(single_data_1)
+    single_prediction = model.predict(single_data)
+    single_real_prediction = y_scaler.inverse_transform(single_prediction)
+
+    X_hat = Xe(single_real_prediction[0, 0], single_real_prediction[0,1], single_real_prediction[0,2])
+    Y_hat = Ye(single_real_prediction[0,0], single_real_prediction[0,1], single_real_prediction[0,2])
+    Tita_hat = tita(single_real_prediction[0,0], single_real_prediction[0,1], single_real_prediction[0,2])
+
+    Joint_angle_predict[q][0] = q
+    Joint_angle_predict[q][1] = single_real_prediction[0,0]
+    Joint_angle_predict[q][2] = single_real_prediction[0,1]
+    Joint_angle_predict[q][3] = single_real_prediction[0,2]
+
+    Error[q][0] = Input_Circle[q, 0] - X_hat
+    Error[q][1] = Input_Circle[q, 1] - Y_hat
+    Error[q][2] = Input_Circle[q, 2] - Tita_hat
+    Error[q][3] = math.degrees(single_real_prediction[0,0])
+    Error[q][4] = math.degrees(single_real_prediction[0,1])
+    Error[q][5] = math.degrees(single_real_prediction[0,2])
+    Error[q][6] = q
+
+    print("X: ", Input_Circle[q, 0], " Y: ", Input_Circle[q, 1], "Tita: ", Input_Circle[q, 2])
+    print("X^:", X_hat, " Y^:", Y_hat, " Tita^:", Tita_hat)
+    print(" ")
+    plt.scatter(X_hat, Y_hat, c='r')
+
+    plt.savefig('Desired Tragectory Cordinates and  Predicted.png')
+
+    Q1_patch = mpatches.Patch(color='red', label='1st joint')
+    Q2_patch = mpatches.Patch(color='blue', label='2nd joint')
+    Q3_patch = mpatches.Patch(color='green', label='3rd joint')
+
+    plt.clf()
+    plt.plot(Joint_angle_predict[:, 0], Joint_angle_predict[:, 1], c='r')
+    plt.plot(Joint_angle_predict[:, 1], Joint_angle_predict[:, 2], c='b')
+    plt.plot(Joint_angle_predict[:, 2], Joint_angle_predict[:, 3], c='g')
+    plt.legend(handles = [Q1_patch, Q2_patch, Q3_patch])
+    plt.title('Joint angle variation over data points')
+
+    plt.savefig('Joint angle variation over data points.png')
+
+    P1_patch = mpatches.Patch(color='red', label='Error in X coordinates')
+    P2_patch = mpatches.Patch(color='blue', label='Error in Y coordinates')
+    P3_patch = mpatches.Patch(color='green', label='Error in Tita ')
+
+    plt.clf()
+    plt.plot(Error[:, 6], Error[:, 0], c='r')
+    plt.plot(Error[:, 6], Error[:, 1], c='b')
+    plt.plot(Error[:, 6], Error[:, 2], c='g')
+    plt.title('Error of X, Y and tita in the evolution')
+    plt.legend(handles = [P1_patch, P2_patch, P3_patch])
+
+    plt.savefig('Error of X,Y and Tita in the evolution')
+    plt.show()
 
